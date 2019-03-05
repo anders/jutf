@@ -46,3 +46,9 @@ func TestDecode(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkEncode(b *testing.B) {
+	for n:=0; n < b.N; n++ {
+		Encode("Hello\x00Wörld!!! \U0001f4a9")
+	}
+}

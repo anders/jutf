@@ -30,34 +30,53 @@ import (
 // Encode returns a string in modified UTF-8 format.
 func Encode(s string) []byte {
 	// Naive code, optimize later.
-	buf := bytes.Buffer{}
+	buffer := bytes.Buffer{}
 
-	enc3 := func(r rune) {
-		buf.WriteByte(byte(0xe0 | ((r >> 12) & 0xf)))
-		buf.WriteByte(byte(0x80 | ((r >> 6) & 0x3f)))
-		buf.WriteByte(byte(0x80 | (r & 0x3f)))
-	}
+	// Output will be as long as s, potentially longer
+	buffer.Grow(len(s))
+
+	// up to 6 byte long encoding
+	buf := make([]byte, 6)
 
 	for _, r := range s {
 		if r == 0 {
-			buf.WriteByte(0xc0)
-			buf.WriteByte(0x80)
+			buf[0] = 0xc0
+			buf[1] = 0x80
+
+			buffer.Write(buf[0:2])
 		} else if r >= 1 && r <= 0x7f {
-			buf.WriteByte(byte(r))
+			buffer.WriteByte(byte(r))
 		} else if r >= 0x80 && r <= 0x7ff {
-			buf.WriteByte(byte(0xc0 | (r >> 6)))
-			buf.WriteByte(byte(0x80 | (r & 0x3f)))
+			buf[0] = byte(0xc0 | (r >> 6))
+			buf[1] = byte(0x80 | (r & 0x3f))
+
+			buffer.Write(buf[0:2])
 		} else if r >= 0x800 && r <= 0xffff {
-			enc3(r)
+			buf[0] = byte(0xe0 | ((r >> 12) & 0xf))
+			buf[1] = byte(0x80 | ((r >> 6) & 0x3f))
+			buf[2] = byte(0x80 | (r & 0x3f))
+
+			buffer.Write(buf[0:3])
 		} else if r >= 0x10000 && r <= 0x10ffff {
-			enc3(((r - 0x10000) >> 10) + 0xd800)
-			enc3(((r - 0x10000) & 0x3ff) + 0xdc00)
+			// codepoint1
+			r1 := ((r - 0x10000) >> 10) + 0xd800
+			buf[0] = byte(0xe0 | ((r1 >> 12) & 0xf))
+			buf[1] = byte(0x80 | ((r1 >> 6) & 0x3f))
+			buf[2] = byte(0x80 | (r1 & 0x3f))
+
+			// codepoint 2
+			r2 := ((r - 0x10000) & 0x3ff) + 0xdc00
+			buf[3] = byte(0xe0 | ((r2 >> 12) & 0xf))
+			buf[4] = byte(0x80 | ((r2 >> 6) & 0x3f))
+			buf[5] = byte(0x80 | (r2 & 0x3f))
+
+			buffer.Write(buf[0:6])
 		} else {
-			// outside utf-8 range, panic()?
+			panic("out of range rune >0x10ffff")
 		}
 	}
 
-	return buf.Bytes()
+	return buffer.Bytes()
 }
 
 // Decode decodes the modified UTF-8 input in data to a string.
