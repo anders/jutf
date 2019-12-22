@@ -85,6 +85,6 @@ func BenchmarkEncode(b *testing.B) {
 func BenchmarkDecode(b *testing.B) {
 	tmp := Encode("Hello\x00Wörld!!! \U0001f4a9")
 	for n := 0; n < b.N; n++ {
-		Decode(tmp)
+		_, _ = Decode(tmp)
 	}
 }

@@ -7,6 +7,7 @@ package jutf
 import (
 	"bytes"
 	"errors"
+	"unicode/utf8"
 )
 
 // not yet exported.
@@ -44,7 +45,7 @@ var (
 func Encode(s string) []byte {
 	buf := bytes.Buffer{}
 
-	// Output will be as long as s, potentially longer
+	// Output will be at least as long as s, potentially longer
 	buf.Grow(len(s))
 
 	// up to 6 byte long encoding
@@ -94,9 +95,13 @@ func Encode(s string) []byte {
 
 // Decode decodes the input array to a UTF-8 string.
 func Decode(d []byte) (string, error) {
-	// room for improvement: check if the string is already valid utf-8 and copy
+	// if the input already is a normal UTF-8 string, simply return it
+	if utf8.ValidString(string(d)) {
+		return string(d), nil
+	}
+
 	buf := bytes.Buffer{}
-	buf.Grow(len(d)) // up the capacity, should be similar to the input
+	buf.Grow(len(d)) // the final length of the output should be similar to the input.
 
 	for i := 0; i < len(d); {
 		if d[i] == 0 {
