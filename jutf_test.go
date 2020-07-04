@@ -1,4 +1,4 @@
-// Copyright 2019 Anders Bergh <anders1@gmail.com>
+// Copyright 2019-2020 Anders Bergh <anders1@gmail.com>
 // MIT license (see LICENSE).
 
 package jutf

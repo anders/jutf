@@ -1,4 +1,4 @@
-// Copyright 2019 Anders Bergh <anders1@gmail.com>
+// Copyright 2019-2020 Anders Bergh <anders1@gmail.com>
 // MIT license (see LICENSE).
 
 // Package jutf implements the modified UTF-8 encoding used by Java.
@@ -12,7 +12,7 @@ import (
 
 // not yet exported.
 var (
-	errInvalidNUL        = errors.New("Short NUL codepoint not allowed")
+	errInvalidNUL        = errors.New("short NUL codepoint not allowed")
 	errTooShort          = errors.New("unexpected end of data")
 	errTooShortSurrogate = errors.New("unexpected end of data (missing surrogate)")
 	errInvalidEncoding   = errors.New("invalid encoding")
@@ -105,10 +105,10 @@ func Decode(d []byte) (string, error) {
 
 	for i := 0; i < len(d); {
 		if d[i] == 0 {
-			// Java would encode it as overlong NUL (2 bytes)
+			// a short NUL, valid and reasonable except this is Java UTF-8.
 			return "", errInvalidNUL
 		} else if d[i] < 0x80 {
-			// ASCII range, copy
+			// ASCII range, can simply copy it
 			buf.WriteByte(d[i])
 			i++
 		} else if d[i]&0xe0 == 0xc0 {
